@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UniShop - Compare prices across Amazon, Flipkart, Meesho, Ajio & Myntra. Find the best deals on electronics, fashion, home and more.">
+    <title>UniShop - Indian E-Commerce Aggregator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <span class="logo-u">U</span>
+                </div>
+                <span class="logo-text">UniShop</span>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search for products, brands and more..." autocomplete="off">
+                    <button class="search-btn" id="searchBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button class="mobile-filter-btn" id="mobileFilterBtn" aria-label="Open filters">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path>
+                    </svg>
+                    <span>Filters</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Platform Pills -->
+        <div class="platform-pills">
+            <button class="platform-pill active" data-platform="all">
+                <span class="pill-icon">🛒</span> All Platforms
+            </button>
+            <button class="platform-pill" data-platform="amazon">
+                <span class="pill-icon">📦</span> Amazon
+            </button>
+            <button class="platform-pill" data-platform="flipkart">
+                <span class="pill-icon">🛍️</span> Flipkart
+            </button>
+            <button class="platform-pill" data-platform="meesho">
+                <span class="pill-icon">🎀</span> Meesho
+            </button>
+            <button class="platform-pill" data-platform="ajio">
+                <span class="pill-icon">👗</span> Ajio
+            </button>
+            <button class="platform-pill" data-platform="myntra">
+                <span class="pill-icon">👠</span> Myntra
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Filters</h2>
+                <button class="clear-filters" id="clearFilters">Clear All</button>
+                <button class="close-sidebar" id="closeSidebar" aria-label="Close filters">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Active Filters -->
+            <div class="active-filters" id="activeFilters"></div>
+
+            <!-- Categories -->
+            <div class="filter-section">
+                <button class="filter-header" data-section="categories">
+                    <span>Categories</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="filter-content open" id="categoriesFilter">
+                    <div class="category-tree" id="categoryTree"></div>
+                </div>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filter-section">
+                <button class="filter-header" data-section="price">
+                    <span>Price Range</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="filter-content open" id="priceFilter">
+                    <div class="price-inputs">
+                        <div class="price-input-group">
+                            <span class="currency">₹</span>
+                            <input type="number" id="minPrice" placeholder="Min" min="0">
+                        </div>
+                        <span class="price-separator">to</span>
+                        <div class="price-input-group">
+                            <span class="currency">₹</span>
+                            <input type="number" id="maxPrice" placeholder="Max" min="0">
+                        </div>
+                    </div>
+                    <div class="price-slider-container">
+                        <div class="price-range-track" id="priceRangeTrack"></div>
+                        <input type="range" id="minPriceSlider" min="0" max="100000" value="0" class="price-slider">
+                        <input type="range" id="maxPriceSlider" min="0" max="100000" value="100000" class="price-slider">
+                    </div>
+                    <div class="price-presets">
+                        <button class="price-preset" data-min="0" data-max="500">Under ₹500</button>
+                        <button class="price-preset" data-min="500" data-max="1000">₹500 - ₹1000</button>
+                        <button class="price-preset" data-min="1000" data-max="5000">₹1K - ₹5K</button>
+                        <button class="price-preset" data-min="5000" data-max="10000">₹5K - ₹10K</button>
+                        <button class="price-preset" data-min="10000" data-max="100000">₹10K+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brands -->
+            <div class="filter-section">
+                <button class="filter-header" data-section="brands">
+                    <span>Brands</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="filter-content open" id="brandsFilter">
+                    <div class="brand-search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input type="text" id="brandSearch" placeholder="Search brands...">
+                    </div>
+                    <div class="brand-list" id="brandList"></div>
+                </div>
+            </div>
+
+            <!-- Discounts -->
+            <div class="filter-section">
+                <button class="filter-header" data-section="discounts">
+                    <span>Discounts</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="filter-content open" id="discountsFilter">
+                    <div class="discount-options">
+                        <label class="radio-option">
+                            <input type="radio" name="discount" value="0">
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">Any Discount</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="discount" value="10">
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">10% or more</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="discount" value="25">
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">25% or more</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="discount" value="50">
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">50% or more</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="discount" value="70">
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">70% or more</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ratings -->
+            <div class="filter-section">
+                <button class="filter-header" data-section="ratings">
+                    <span>Customer Ratings</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="filter-content open" id="ratingsFilter">
+                    <div class="rating-options">
+                        <label class="rating-option">
+                            <input type="radio" name="rating" value="0">
+                            <span class="rating-stars">
+                                <span class="star">☆</span><span class="star">☆</span><span class="star">☆</span><span class="star">☆</span><span class="star">☆</span>
+                            </span>
+                            <span class="rating-label">Any Rating</span>
+                        </label>
+                        <label class="rating-option">
+                            <input type="radio" name="rating" value="4">
+                            <span class="rating-stars">
+                                <span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star">☆</span>
+                            </span>
+                            <span class="rating-label">4★ & above</span>
+                        </label>
+                        <label class="rating-option">
+                            <input type="radio" name="rating" value="3">
+                            <span class="rating-stars">
+                                <span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star">☆</span><span class="star">☆</span>
+                            </span>
+                            <span class="rating-label">3★ & above</span>
+                        </label>
+                        <label class="rating-option">
+                            <input type="radio" name="rating" value="2">
+                            <span class="rating-stars">
+                                <span class="star filled">★</span><span class="star filled">★</span><span class="star">☆</span><span class="star">☆</span><span class="star">☆</span>
+                            </span>
+                            <span class="rating-label">2★ & above</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Availability -->
+            <div class="filter-section">
+                <button class="filter-header" data-section="availability">
+                    <span>Availability</span>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="filter-content" id="availabilityFilter">
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="inStockOnly" checked>
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">In Stock Only</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" id="excludeOutOfStock">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">Exclude Out of Stock</span>
+                    </label>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Products Section -->
+        <section class="products-section">
+            <!-- Results Header -->
+            <div class="results-header">
+                <div class="results-info">
+                    <h1 id="resultsTitle">Trending Products</h1>
+                    <p id="resultsCount">Loading products...</p>
+                </div>
+                <div class="sort-container">
+                    <label for="sortSelect">Sort by:</label>
+                    <select id="sortSelect">
+                        <option value="relevance">Relevance</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Customer Rating</option>
+                        <option value="discount">Discount</option>
+                        <option value="newest">Newest First</option>
+                    </select>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" aria-label="Grid view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </button>
+                    <button class="view-btn" data-view="list" aria-label="List view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be inserted here -->
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState">
+                <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                </div>
+                <p>Searching across platforms...</p>
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" id="noResults" style="display: none;">
+                <div class="no-results-icon">🔍</div>
+                <h2>No products found</h2>
+                <p>Try adjusting your filters or search terms</p>
+                <button class="reset-btn" id="resetFiltersBtn">Reset Filters</button>
+            </div>
+
+            <!-- Load More -->
+            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                <button class="load-more-btn" id="loadMoreBtn">
+                    <span>Load More Products</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12l7 7 7-7"></path>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <div class="logo-icon small">
+                        <span class="logo-u">U</span>
+                    </div>
+                    <span class="logo-text">UniShop</span>
+                </div>
+                <p>Compare prices across India's top e-commerce platforms</p>
+            </div>
+            <div class="footer-platforms">
+                <h4>Supported Platforms</h4>
+                <div class="platform-logos">
+                    <span class="platform-tag amazon">Amazon</span>
+                    <span class="platform-tag flipkart">Flipkart</span>
+                    <span class="platform-tag meesho">Meesho</span>
+                    <span class="platform-tag ajio">Ajio</span>
+                    <span class="platform-tag myntra">Myntra</span>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p>⚠️ Prototype Version - Prices and availability shown are for demonstration purposes.</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 UniShop. All product data belongs to respective platforms.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
