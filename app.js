@@ -690,8 +690,77 @@ const state = {
         rating: 0,
         inStock: true
     },
-    sort: 'relevance'
+    sort: 'relevance',
+    isLiveMode: false,  // Set to true when scraper server is running
+    isLoading: false
 };
+
+// ========================================
+// API Configuration
+// ========================================
+
+const API_CONFIG = {
+    baseUrl: 'http://localhost:3000',
+    endpoints: {
+        search: '/api/search',
+        products: '/api/products',
+        scrape: '/api/scrape',
+        platforms: '/api/platforms',
+        stats: '/api/stats'
+    },
+    timeout: 30000
+};
+
+/**
+ * Check if the scraper API is available
+ */
+async function checkApiAvailability() {
+    try {
+        const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.platforms}`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(3000)
+        });
+        if (response.ok) {
+            state.isLiveMode = true;
+            console.log('🟢 Scraper API is available - Live mode enabled');
+            showToast('Live scraping mode enabled!', 'success');
+            return true;
+        }
+    } catch (error) {
+        console.log('🔴 Scraper API not available - Using cached data');
+        state.isLiveMode = false;
+    }
+    return false;
+}
+
+/**
+ * Search products via the live scraper API
+ */
+async function searchViaApi(query, platform = 'all') {
+    if (!state.isLiveMode) return null;
+
+    try {
+        const params = new URLSearchParams({ q: query, limit: 50 });
+        if (platform !== 'all') params.append('platform', platform);
+
+        const response = await fetch(
+            `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.search}?${params}`,
+            { signal: AbortSignal.timeout(API_CONFIG.timeout) }
+        );
+
+        if (!response.ok) throw new Error('API request failed');
+
+        const data = await response.json();
+        if (data.success && data.products) {
+            console.log(`[API] Found ${data.products.length} products for "${query}"`);
+            return data.products;
+        }
+    } catch (error) {
+        console.error('[API] Search error:', error.message);
+        showToast('Live search failed, using cached data', 'error');
+    }
+    return null;
+}
 
 // ========================================
 // Categories Configuration
@@ -744,12 +813,15 @@ const elements = {
 // Initialization
 // ========================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     initCategories();
     initBrands();
     initEventListeners();
     filterAndRenderProducts();
+
+    // Check if live scraper API is available
+    await checkApiAvailability();
 });
 
 // ========================================
@@ -774,11 +846,11 @@ function toggleTheme() {
 function initCategories() {
     const categoryTree = elements.categoryTree;
     categoryTree.innerHTML = CATEGORIES.map(cat => {
-        const count = state.products.filter(p => 
+        const count = state.products.filter(p =>
             p.category.toLowerCase().includes(cat.name.toLowerCase().split(' ')[0]) ||
             cat.subCategories.some(sub => p.subCategory === sub)
         ).length;
-        
+
         return `
             <div class="category-item">
                 <label>
@@ -790,7 +862,7 @@ function initCategories() {
             </div>
         `;
     }).join('');
-    
+
     categoryTree.querySelectorAll('input').forEach(input => {
         input.addEventListener('change', (e) => {
             const category = e.target.dataset.category;
@@ -810,7 +882,7 @@ function initCategories() {
 
 function initBrands() {
     updateBrandList();
-    
+
     elements.brandSearch.addEventListener('input', (e) => {
         updateBrandList(e.target.value);
     });
@@ -818,14 +890,14 @@ function initBrands() {
 
 function updateBrandList(searchTerm = '') {
     const brands = [...new Set(state.products.map(p => p.brand))].sort();
-    const filteredBrands = searchTerm 
+    const filteredBrands = searchTerm
         ? brands.filter(b => b.toLowerCase().includes(searchTerm.toLowerCase()))
         : brands;
-    
+
     elements.brandList.innerHTML = filteredBrands.slice(0, 20).map(brand => {
         const count = state.products.filter(p => p.brand === brand).length;
         const checked = state.filters.brands.includes(brand) ? 'checked' : '';
-        
+
         return `
             <label class="checkbox-option">
                 <input type="checkbox" value="${brand}" ${checked}>
@@ -834,7 +906,7 @@ function updateBrandList(searchTerm = '') {
             </label>
         `;
     }).join('');
-    
+
     elements.brandList.querySelectorAll('input').forEach(input => {
         input.addEventListener('change', (e) => {
             const brand = e.target.value;
@@ -855,34 +927,34 @@ function updateBrandList(searchTerm = '') {
 function initEventListeners() {
     // Theme toggle
     elements.themeToggle.addEventListener('click', toggleTheme);
-    
+
     // Search
     elements.searchInput.addEventListener('input', debounce((e) => {
         state.filters.search = e.target.value;
         filterAndRenderProducts();
     }, 300));
-    
+
     elements.searchBtn.addEventListener('click', () => {
         state.filters.search = elements.searchInput.value;
         filterAndRenderProducts();
     });
-    
+
     elements.searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             state.filters.search = elements.searchInput.value;
             filterAndRenderProducts();
         }
     });
-    
+
     // Mobile sidebar
     elements.mobileFilterBtn.addEventListener('click', openSidebar);
     elements.closeSidebar.addEventListener('click', closeSidebar);
     elements.sidebarOverlay.addEventListener('click', closeSidebar);
-    
+
     // Clear filters
     elements.clearFilters.addEventListener('click', clearAllFilters);
     elements.resetFiltersBtn.addEventListener('click', clearAllFilters);
-    
+
     // Platform pills
     document.querySelectorAll('.platform-pill').forEach(pill => {
         pill.addEventListener('click', (e) => {
@@ -892,7 +964,7 @@ function initEventListeners() {
             filterAndRenderProducts();
         });
     });
-    
+
     // Filter section accordions
     document.querySelectorAll('.filter-header').forEach(header => {
         header.addEventListener('click', () => {
@@ -900,20 +972,20 @@ function initEventListeners() {
             content.classList.toggle('open');
         });
     });
-    
+
     // Price inputs
     elements.minPrice.addEventListener('input', debounce((e) => {
         state.filters.minPrice = parseInt(e.target.value) || 0;
         updatePriceSliders();
         filterAndRenderProducts();
     }, 300));
-    
+
     elements.maxPrice.addEventListener('input', debounce((e) => {
         state.filters.maxPrice = parseInt(e.target.value) || 200000;
         updatePriceSliders();
         filterAndRenderProducts();
     }, 300));
-    
+
     // Price sliders
     elements.minPriceSlider.addEventListener('input', (e) => {
         const value = parseInt(e.target.value);
@@ -924,7 +996,7 @@ function initEventListeners() {
             filterAndRenderProducts();
         }
     });
-    
+
     elements.maxPriceSlider.addEventListener('input', (e) => {
         const value = parseInt(e.target.value);
         if (value > state.filters.minPrice) {
@@ -934,7 +1006,7 @@ function initEventListeners() {
             filterAndRenderProducts();
         }
     });
-    
+
     // Price presets
     document.querySelectorAll('.price-preset').forEach(preset => {
         preset.addEventListener('click', () => {
@@ -948,7 +1020,7 @@ function initEventListeners() {
             filterAndRenderProducts();
         });
     });
-    
+
     // Discount filter
     document.querySelectorAll('input[name="discount"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -956,7 +1028,7 @@ function initEventListeners() {
             filterAndRenderProducts();
         });
     });
-    
+
     // Rating filter
     document.querySelectorAll('input[name="rating"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -964,13 +1036,13 @@ function initEventListeners() {
             filterAndRenderProducts();
         });
     });
-    
+
     // Sort
     elements.sortSelect.addEventListener('change', (e) => {
         state.sort = e.target.value;
         filterAndRenderProducts();
     });
-    
+
     // View toggle
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -980,7 +1052,7 @@ function initEventListeners() {
             elements.productsGrid.classList.toggle('list-view', state.viewMode === 'list');
         });
     });
-    
+
     // Load more
     elements.loadMoreBtn.addEventListener('click', loadMoreProducts);
 }
@@ -1024,77 +1096,77 @@ function updatePriceTrack() {
 
 function filterAndRenderProducts() {
     showLoading();
-    
+
     setTimeout(() => {
         // Apply filters
         state.filteredProducts = state.products.filter(product => {
             // Search filter
             if (state.filters.search) {
                 const searchLower = state.filters.search.toLowerCase();
-                const matchesSearch = 
+                const matchesSearch =
                     product.title.toLowerCase().includes(searchLower) ||
                     product.brand.toLowerCase().includes(searchLower) ||
                     product.category.toLowerCase().includes(searchLower);
                 if (!matchesSearch) return false;
             }
-            
+
             // Platform filter
             if (state.filters.platform !== 'all' && product.platform !== state.filters.platform) {
                 return false;
             }
-            
+
             // Category filter
             if (state.filters.categories.length > 0) {
-                const matchesCategory = state.filters.categories.some(cat => 
+                const matchesCategory = state.filters.categories.some(cat =>
                     product.category.toLowerCase().includes(cat.toLowerCase().split(' ')[0])
                 );
                 if (!matchesCategory) return false;
             }
-            
+
             // Brand filter
             if (state.filters.brands.length > 0 && !state.filters.brands.includes(product.brand)) {
                 return false;
             }
-            
+
             // Price filter
             if (product.discountedPrice < state.filters.minPrice || product.discountedPrice > state.filters.maxPrice) {
                 return false;
             }
-            
+
             // Discount filter
             if (state.filters.discount > 0 && product.discount < state.filters.discount) {
                 return false;
             }
-            
+
             // Rating filter
             if (state.filters.rating > 0 && product.rating < state.filters.rating) {
                 return false;
             }
-            
+
             return true;
         });
-        
+
         // Apply sorting
         sortProducts();
-        
+
         // Reset pagination
         state.currentPage = 1;
         state.displayedProducts = state.filteredProducts.slice(0, state.itemsPerPage);
-        
+
         // Render
         hideLoading();
         renderProducts();
         updateResultsInfo();
         updateActiveFilters();
         updateBrandList(elements.brandSearch.value);
-        
+
         // Show/hide load more
-        elements.loadMoreContainer.style.display = 
+        elements.loadMoreContainer.style.display =
             state.displayedProducts.length < state.filteredProducts.length ? 'block' : 'none';
-        
+
         // Show no results if empty
         elements.noResults.style.display = state.filteredProducts.length === 0 ? 'flex' : 'none';
-        
+
     }, 300);
 }
 
@@ -1170,9 +1242,9 @@ function loadMoreProducts() {
     const start = 0;
     const end = state.currentPage * state.itemsPerPage;
     state.displayedProducts = state.filteredProducts.slice(start, end);
-    
+
     renderProducts();
-    
+
     // Hide load more if all products displayed
     if (state.displayedProducts.length >= state.filteredProducts.length) {
         elements.loadMoreContainer.style.display = 'none';
@@ -1185,7 +1257,7 @@ function loadMoreProducts() {
 
 function updateResultsInfo() {
     const searchTerm = state.filters.search;
-    
+
     if (searchTerm) {
         elements.resultsTitle.textContent = `Results for "${searchTerm}"`;
     } else if (state.filters.platform !== 'all') {
@@ -1193,34 +1265,34 @@ function updateResultsInfo() {
     } else {
         elements.resultsTitle.textContent = 'Trending Products';
     }
-    
-    elements.resultsCount.textContent = 
+
+    elements.resultsCount.textContent =
         `Showing ${state.displayedProducts.length} of ${state.filteredProducts.length} products`;
 }
 
 function updateActiveFilters() {
     const chips = [];
-    
+
     if (state.filters.platform !== 'all') {
         chips.push({ type: 'platform', label: capitalizeFirst(state.filters.platform), value: state.filters.platform });
     }
-    
+
     state.filters.categories.forEach(cat => {
         chips.push({ type: 'category', label: cat, value: cat });
     });
-    
+
     state.filters.brands.forEach(brand => {
         chips.push({ type: 'brand', label: brand, value: brand });
     });
-    
+
     if (state.filters.discount > 0) {
         chips.push({ type: 'discount', label: `${state.filters.discount}%+ off`, value: state.filters.discount });
     }
-    
+
     if (state.filters.rating > 0) {
         chips.push({ type: 'rating', label: `${state.filters.rating}★+`, value: state.filters.rating });
     }
-    
+
     elements.activeFilters.innerHTML = chips.map(chip => `
         <span class="filter-chip">
             ${chip.label}
@@ -1252,7 +1324,7 @@ function removeFilter(type, value) {
             document.querySelector('input[name="rating"][value="0"]').checked = true;
             break;
     }
-    
+
     filterAndRenderProducts();
 }
 
@@ -1268,7 +1340,7 @@ function clearAllFilters() {
         rating: 0,
         inStock: true
     };
-    
+
     // Reset UI
     elements.searchInput.value = '';
     document.querySelectorAll('.platform-pill').forEach(p => p.classList.remove('active'));
@@ -1280,7 +1352,7 @@ function clearAllFilters() {
     updatePriceSliders();
     document.querySelector('input[name="discount"][value="0"]').checked = true;
     document.querySelector('input[name="rating"][value="0"]').checked = true;
-    
+
     filterAndRenderProducts();
     showToast('All filters cleared', 'info');
 }
@@ -1323,9 +1395,9 @@ function showToast(message, type = 'info') {
         <span class="toast-message">${message}</span>
         <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
     `;
-    
+
     elements.toastContainer.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.classList.add('hiding');
         setTimeout(() => toast.remove(), 300);

@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+.cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Scraped data cache
+scraper/cache/
+*.json.bak
+
+# Test coverage
+coverage/
+.nyc_output/
