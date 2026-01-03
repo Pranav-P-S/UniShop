@@ -56,7 +56,7 @@
 </table>
 
 ---
-
+<!--
 ## 🚀 Demo
 
 <div align="center">
@@ -69,12 +69,12 @@
 </div>
 
 ---
-
+-->
 ## 📦 Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/UniShop.git
+git clone https://github.com/Pranav-P-S/UniShop.git
 
 # Navigate to project directory
 cd UniShop
